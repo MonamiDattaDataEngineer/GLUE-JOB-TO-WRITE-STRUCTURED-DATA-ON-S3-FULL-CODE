@@ -143,8 +143,7 @@ select
 from
     msil_mscrm_structured_{Env}.prospect_dl
 where
-    rn=1
-    and DATASET_DATE='{DATASET_DATE}'
+    DATASET_DATE='{DATASET_DATE}'
 ''')
 df_insert.crerateOrReplaceTempView('prospect')
 df_insert.printSchema()
