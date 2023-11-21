@@ -91,7 +91,7 @@ print (f"crawler : {crawler}")
 
 print (f"DATASET_DATE : {DATASET_DATE}")
 
-# raise Exception('Forced Exception')
+#raise Exception('Forced Exception')
 
 print('##############TASK-1-PARAMETERS+SET_PATH-COMPLETED################')
 
@@ -260,8 +260,8 @@ from
 ''').select("pcl_variantname","pcl_variantcode","pcl_variantid")\
     .withColumnRenamed("pcl_variantcode","pcl_variantcode_vb")\
     .withColumnRenamed("pcl_variantid","pcl_variantid_vb")\
-    .withColumn("manufacturingYear",F.lit(None))\
-    .withColumn("temporaryRegistration",F.lit(None))\
+    .withColumn("manufacturingYear",F.lit(None).cast("integer"))\
+    .withColumn("temporaryRegistration",F.lit(None).cast("string"))\
     .withColumnRenamed("pcl_modelid","pcl_modelid_vb")
 
 df_pcl_variantbase.createOrReplaceTempView('pcl_variantbase')
@@ -1393,7 +1393,6 @@ df_final = df_stage18.select("leadid","prospectId", "createdon",
 "carColor", 
 #"enrollmentDetails", 
 #"interests",  
-"new_response", 
 "voc", 
 #"customerFollowUp", 
 "followUpDate", 
