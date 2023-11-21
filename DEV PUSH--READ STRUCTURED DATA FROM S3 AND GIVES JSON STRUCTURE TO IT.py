@@ -10,6 +10,7 @@ from awsglue.job import Job
 from pyspark.sql.functions import udf
 from pyspark.sql import functions as F
 from pyspark.sql import types as T
+from awsglue.dynamicframe import DynamicFrame
 
 import boto3
 
@@ -133,7 +134,7 @@ def run_crawler(crawler, database, target_table, dataset_date):
         raise Exception(e)
 
 print('##############TASK-2-UDF-DEFINED################')
-raise Exception('Forced Exception')
+#raise Exception('Forced Exception')
 ###################################TASK-3-DATA-LOADING#######################################
 print('##############TASK-3-DATA-LOADING###############')
 
@@ -143,14 +144,14 @@ select
 from
     msil_mscrm_structured_{Env}.prospect_dl
 where
-    DATASET_DATE='{DATASET_DATE}'
+     DATASET_DATE='{DATASET_DATE}'
 ''')
-df_insert.crerateOrReplaceTempView('prospect')
+df_insert.createOrReplaceTempView('prospect')
 df_insert.printSchema()
 count_of_records = df_insert.count()
 print(f"count of records to be inserted: {count_of_records}")
 
-print(f"starting loading into {contact_table_pg}")
+print(f"starting loading into prospect_details")
 
 df_insert_json = spark.sql('''
 select
@@ -255,25 +256,25 @@ select
     leadid
 from
     prospect
-''').withColumn('enrollmentDetails', when(F.col('prospectType')!='Enquiry MSDS', None).otherwise(F.col('enrollmentDetails')))\
-    .withColumn('purchaseDetails', when(F.col('prospectType')=='Enquiry MSDS', None).otherwise(F.col('purchaseDetails')))
-
+''').withColumn('enrollmentDetails', F.when(F.col('prospectType')!='Enquiry MSDS', None).otherwise(F.col('enrollmentDetails')))\
+    .withColumn('purchaseDetails', F.when(F.col('prospectType')=='Enquiry MSDS', None).otherwise(F.col('purchaseDetails')))
+    
+df_insert_json = df_insert_json.limit(10)
 dyf_insert_json = DynamicFrame.fromDF(df_insert_json, glueContext, "dyf_insert_json")
 
-raise Exception('Forced Exception')
+#raise Exception('Forced Exception')
 
 df_insert.write.format('parquet').mode('overwrite').save(f'{data_stage_path}/stage1')
 
 dff = glueContext.write_dynamic_frame.from_options(dynamic_frame, connection_type="documentdb", connection_options=write_documentdb_options)
-
+'''
 records_migrated = ending_sequence_id-starting_sequence_id
 print (f"{records_migrated} records inserted")
-
 if records_migrated == count_of_records:
-    print(f"All records loaded completely into {contact_table_pg}")
+    print(f"All records loaded completely into prospect_details")
 else:
     raise Exception(f"{count_of_records-records_migrated} records not migrated \n JOB FAILED")
-
+'''
 print('##############TASK-3-DATA-LOADING-COMPLETED################')
 
 ###################################TASK-3-DATA-VALIDATION#######################################
