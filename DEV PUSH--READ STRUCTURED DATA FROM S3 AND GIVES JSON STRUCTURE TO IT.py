@@ -75,6 +75,21 @@ read_docdb_options = {
     "partitionerOptions.partitionKey": "_id"
 }
 
+write_documentdb_options = {
+    "uri": documentdb_write_uri,
+    "database": "prospect-db",
+    "collection": "prospect_details",
+    "username": "prospect-rw",
+    "password": "rinfuie4342",
+    "ssl": "true",
+    "ssl.domain_match": "false",
+    "partitioner": "MongoSamplePartitioner",
+    "partitionerOptions.partitionSizeMB": "10",
+    "partitionerOptions.partitionKey": "_id",
+    "retryWrites": "false"
+}
+
+
 print (f"Client : {Client}")
 print (f"Domain : {Domain}")
 print (f"EntityName : {EntityName}")
@@ -260,13 +275,19 @@ from
     .withColumn('purchaseDetails', F.when(F.col('prospectType')=='Enquiry MSDS', None).otherwise(F.col('purchaseDetails')))
     
 df_insert_json = df_insert_json.limit(10)
-dyf_insert_json = DynamicFrame.fromDF(df_insert_json, glueContext, "dyf_insert_json")
+df_insert_json = df_insert_json.cache()
+df_insert_json.select("prospectId","leadid","prospectType").show(n=100, truncate= False)
+#dyf_insert_json = DynamicFrame.fromDF(df_insert_json, glueContext, "dyf_insert_json")
 
 #raise Exception('Forced Exception')
 
 df_insert.write.format('parquet').mode('overwrite').save(f'{data_stage_path}/stage1')
 
+#dff = glueContext.write_dynamic_frame.from_options(dyf_insert_json, connection_type="documentdb", connection_options=write_documentdb_options)
+
+dynamic_frame = DynamicFrame.fromDF(df_insert_json, glueContext, "dynamic_frame")
 dff = glueContext.write_dynamic_frame.from_options(dynamic_frame, connection_type="documentdb", connection_options=write_documentdb_options)
+
 '''
 records_migrated = ending_sequence_id-starting_sequence_id
 print (f"{records_migrated} records inserted")
