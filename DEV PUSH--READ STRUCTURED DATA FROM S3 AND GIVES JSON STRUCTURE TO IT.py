@@ -160,7 +160,7 @@ from
     msil_mscrm_structured_{Env}.prospect_dl
 where
      DATASET_DATE='{DATASET_DATE}'
-''')
+''').drop('dataset_date').limit(10)
 df_insert.createOrReplaceTempView('prospect')
 df_insert.printSchema()
 count_of_records = df_insert.count()
@@ -274,7 +274,7 @@ from
 ''').withColumn('enrollmentDetails', F.when(F.col('prospectType')!='Enquiry MSDS', None).otherwise(F.col('enrollmentDetails')))\
     .withColumn('purchaseDetails', F.when(F.col('prospectType')=='Enquiry MSDS', None).otherwise(F.col('purchaseDetails')))
     
-df_insert_json = df_insert_json.limit(10)
+#df_insert_json = df_insert_json.limit(10)
 df_insert_json = df_insert_json.cache()
 df_insert_json.select("prospectId","leadid","prospectType").show(n=100, truncate= False)
 #dyf_insert_json = DynamicFrame.fromDF(df_insert_json, glueContext, "dyf_insert_json")
