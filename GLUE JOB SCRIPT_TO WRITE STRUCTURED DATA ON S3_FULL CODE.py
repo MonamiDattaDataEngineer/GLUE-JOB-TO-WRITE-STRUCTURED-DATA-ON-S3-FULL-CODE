@@ -1,3 +1,4 @@
+###job name---msil_mscrm_structured_dev------#########
 #######################################TASK-0#################################################
 # IMPORTS
 
@@ -1434,3 +1435,28 @@ print('##############TASK-7-REFRESH-ATHENA-COMPLETED################')
 
 print('##############JOB-COMPLETED-SUCCESSFULLY################')
 job.commit()
+
+
+
+
+
+
+
+#################outputlogs#############3
+
+Client : msil
+Domain : mscrm
+EntityName : prospect
+Source : dl
+Target : dl
+Action : structured
+Env : dev
+data_source_path : s3://msil-inbound-crm-raw-non-prod/source/parquet/
+target_write_path : s3://msil-inbound-crm-structured-non-prod/dev/history/prospect_dl/dataset_date=20231108/
+data_stage_path : s3://msil-inbound-crm-stage-non-prod/dev/history/prospect_dl/job_msil_mscrm_prospect_dl_to_dl_structured_dev
+database : msil_mscrm_structured_dev
+target_table : prospect_dl
+crawler : crawler-msil_mscrm_structured_dev-prospect_dl
+DATASET_DATE : 20231108
+##############TASK-1-PARAMETERS+SET_PATH-COMPLETED################
+##############TASK-2-UDF-DEFINED################
