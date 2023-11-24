@@ -1,3 +1,5 @@
+#########job_msil_mscrm_prospect_dl_to_documentdb_outbound_dev###########3
+
 #######################################TASK-0#################################################
 # IMPORTS
 
@@ -327,3 +329,24 @@ print ("##############TASK-6-DATA-SYNC-COMPLETED##############")
 print('##############JOB-COMPLETED-SUCCESSFULLY################')
 
 job.commit()
+
+
+
+>>>otput logs>>>
+
+Client : msil
+Domain : mscrm
+EntityName : prospect
+Source : dl
+Target : documentdb
+Action : outbound
+Env : dev
+target_write_path : s3://msil-inbound-crm-outbound-non-prod/dev/history/documentdb/prospect_documentdb/dataset_date=20231108/
+data_stage_path : s3://msil-inbound-crm-stage-non-prod/dev/history/documentdb/prospect_documentdb/job_msil_mscrm_prospect_dl_to_documentdb_outbound_dev
+database : msil_mscrm_outbound_dev
+target_table : prospect_documentdb
+crawler : crawler-msil_mscrm_outbound_dev-prospect_documentdb
+DATASET_DATE : 20231108
+##############TASK-1-IMPORTS+SPARK_CONFIG-COMPLETED################
+##############TASK-2-UDF-DEFINED################
+##############TASK-3-DATA-LOADING###############
