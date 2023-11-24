@@ -331,6 +331,7 @@ from
     .withColumn("code", F.concat_ws("-", F.col("mapcd"), F.col("loccd"))).distinct()
 df_dealermaster.createOrReplaceTempView('dealermaster')  
 print (f"df_dealermaster_count : {df_dealermaster.count()}")
+
 ###Reading from StringMapBase table and mapping with Leadbase
 
 df_stage1 = spark.sql('''
@@ -415,6 +416,7 @@ with
 
 select
     leadbase.*,
+    concat('PM', lpad(CAST((row_number() over(order by leadid)) as string), 9, '0')) prospectId,
     pcl_prospectsubcategory_attr.value prospectTypeSrc,
     pcl_prospectcategory_attr.value prospectcategory1,
     coalesce(pcl_purchaseoption_attr.value , 'Cash Purchase') pcl_purchase_option,
@@ -478,13 +480,20 @@ left join
     on (leadbase.pcl_leadsource=pcl_leadsource_attr.attributevalue)
     
 ''').withColumnRenamed("companyname","companyname_src")\
-    .withColumn("prospectId", F.concat(F.expr("'P'"), F.lpad(F.expr("CAST(RAND() * POW(10, 10) AS STRING)"), 11, '0')))\
-    .withColumn("prospectId", F.expr("replace(prospectId, '.', '')"))\
     .withColumn("acc_pcl_dealercode" , F.trim(F.col("acc_pcl_dealercode")))
-    
+    #.select("Leadid","prospectId","dmsEnquiryId","dmsEnquiryCreatedOn","dmsEnquiryExist","queryDescription",
+    #          "carRegistrationNumber","lob","createdOn","companyName","createdby","pcl_prospectsubcategory","pcl_prospectcategory",
+    #          "pcl_purchaseoption","pcl_liketoexchangeoldcar","pcl_purchaseinterestduration","pcl_interestlevelrating",
+    #          "pcl_leadsource","pcl_contactid","pcl_variantid","pcl_dealercode","pcl_dealeremail","pcl_dealeruniquecode","pcl_dealerforcode","pcl_dealerid",
+    #          "enquiryType","pcl_prospect","pcl_modelid","pcl_variantid")
+    #.withColumn("prospectId", F.concat(F.expr("'P'"), F.lpad(F.expr("CAST(RAND() * POW(10, 10) AS STRING)"), 11, '0')))\
+    #.withColumn("prospectId", F.expr("replace(prospectId, '.', '')"))\
+
+#df_contact_dl_new = df_contact_dl.distinct().select("cdl_mobileNumber","reference_number","firstName","lastName","cdl_emailid","msilContact","customerType","modeOfCommunication")
 df_stage1 = df_stage1.join(df_contact_dl,df_stage1["pcl_contactid"]==df_contact_dl["reference_number"] , how= "left")
 df_stage1 = df_stage1.cache()
 print (f"df_stage1_count : {df_stage1.count()}")
+
 
 df_stage1 = df_stage1.drop('leadqualitycode', 'prioritycode', 'industrycode', 'preferredcontactmethodcode',
     'salesstagecode', 'owningbusinessunit', 'subject', 'participatesinworkflow',
