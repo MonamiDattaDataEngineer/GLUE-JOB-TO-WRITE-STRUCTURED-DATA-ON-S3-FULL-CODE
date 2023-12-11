@@ -1,4 +1,5 @@
-###job name---msil_mscrm_structured_dev------#########
+##########job_msil_mscrm_prospect_dl_to_dl_structured_dev############3gluejob name#3DATASETDATE=20231130###########
+
 #######################################TASK-0#################################################
 # IMPORTS
 
@@ -207,7 +208,7 @@ select
 from
     inbound.leadbase
     where createdon>=to_timestamp('2023-01-01')
-    and snapshot_dt = '2023-11-08'
+    and snapshot_dt = '2023-11-30'
 ''').withColumnRenamed('pcl_dealeruniquecode', 'pcl_dealeruniquecode_leadbase')\
     .withColumnRenamed('statecode', 'statecode_leadbase')\
     .withColumnRenamed('pcl_name', 'pcl_name_leadbase')\
@@ -223,7 +224,7 @@ select
     *
 from
     inbound.accountbasemigration
-    where  snapshot_dt = '2023-11-08'
+    where  snapshot_dt = '20231130'
 ''')
 df_accountbasemigration.createOrReplaceTempView('accountbasemigration')
 print (f"df_accountbasemigration_count : {df_accountbasemigration.count()}")
@@ -235,7 +236,7 @@ select
     systemuserid
 from
     inbound.systemuserbasemigration
-    where  snapshot_dt = '2023-11-08'
+    where  snapshot_dt = '20231130'
 ''')
 df_systemuserbasemigration.createOrReplaceTempView('systemuserbasemigration')
 print (f"df_systemuserbasemigration_count : {df_systemuserbasemigration.count()}")
@@ -245,7 +246,7 @@ select
     *
 from
     inbound.pcl_modelmasterbasemigration
-    where  snapshot_dt = '2023-11-08'
+    where  snapshot_dt = '2023-11-30'
 ''').drop('pcl_modelid','createdon')
 df_pcl_modelmasterbasemigration.createOrReplaceTempView('pcl_modelmasterbasemigration')
 print (f"df_pcl_modelmasterbasemigration_count : {df_pcl_modelmasterbasemigration.count()}")
@@ -257,11 +258,11 @@ select
     *
 from
     inbound.pcl_variantbase
-    where snapshot_dt = '2023-11-08'
+    where snapshot_dt = '20231130'
 ''').select("pcl_variantname","pcl_variantcode","pcl_variantid")\
     .withColumnRenamed("pcl_variantcode","pcl_variantcode_vb")\
     .withColumnRenamed("pcl_variantid","pcl_variantid_vb")\
-    .withColumn("manufacturingYear",F.lit(None).cast("integer"))\
+    .withColumn("manufacturingYear",F.lit(None).cast("string"))\
     .withColumn("temporaryRegistration",F.lit(None).cast("string"))\
     .withColumnRenamed("pcl_modelid","pcl_modelid_vb")
 
@@ -282,22 +283,15 @@ print (f"df_model_master_updated_parquet_count : {df_model_master_updated_parque
 
 
 
+
 df_contact_dl = spark.sql('''
 select
     *
 from
     msil_mscrm_structured_dev.contact_dl
 ''').select("mobile_no" , "reference_number","first_name","middle_name",
-"last_name","email_id").withColumnRenamed("mobile_no","cdl_mobileNumber")\
-            .withColumnRenamed("first_name","cdl_firstName")\
-            .withColumnRenamed("last_name","cdl_lastName")\
-            .withColumnRenamed("email_id","cdl_emailid")\
-            .withColumn("msilContact", F.concat_ws(" ", F.col("cdl_firstName"), F.col("cdl_lastName")))
+"last_name","email_id")
            
-            
-            
-
-
 
 df_contact_dl.createOrReplaceTempView('contact_dl')
 print (f"df_contact_dl_count : {df_contact_dl.count()}")
@@ -332,7 +326,6 @@ from
     .withColumn("code", F.concat_ws("-", F.col("mapcd"), F.col("loccd"))).distinct()
 df_dealermaster.createOrReplaceTempView('dealermaster')  
 print (f"df_dealermaster_count : {df_dealermaster.count()}")
-
 ###Reading from StringMapBase table and mapping with Leadbase
 
 df_stage1 = spark.sql('''
@@ -346,7 +339,7 @@ with
         inbound.stringmapbase
     where
         AttributeName='pcl_prospectsubcategory'
-        and snapshot_dt = '2023-11-08'
+        and snapshot_dt = '20231130'
     ),
     pcl_prospectcategory_attr as (
     select
@@ -357,7 +350,7 @@ with
         inbound.stringmapbase
     where
         AttributeName='pcl_prospectcategory'
-        and snapshot_dt = '2023-11-08'
+        and snapshot_dt = '20231130'
     ),
     pcl_purchaseoption_attr as (
     select
@@ -368,7 +361,7 @@ with
         inbound.stringmapbase
     where
         AttributeName='pcl_purchaseoption'
-        and snapshot_dt = '2023-11-08'
+        and snapshot_dt = '20231130'
     ),
     pcl_liketoexchangeoldcar_attr as (
     select
@@ -379,7 +372,7 @@ with
         inbound.stringmapbase
     where
         AttributeName='pcl_liketoexchangeoldcar'
-        and snapshot_dt = '2023-11-08'
+        and snapshot_dt = '20231130'
     ),
     pcl_purchaseinterestduration_attr as (
     select
@@ -390,7 +383,7 @@ with
         inbound.stringmapbase
     where
         AttributeName='pcl_purchaseinterestduration'
-        and snapshot_dt = '2023-11-08'
+        and snapshot_dt = '20231130'
     ),
     pcl_interestlevelrating_attr as (
     select
@@ -401,7 +394,7 @@ with
         inbound.stringmapbase
     where
         AttributeName='pcl_interestlevelrating'
-        and snapshot_dt = '2023-11-08'
+        and snapshot_dt = '20231130'
     ),
     pcl_leadsource_attr as (
     select
@@ -412,7 +405,7 @@ with
         inbound.stringmapbase
     where
         AttributeName='pcl_leadsource'
-        and snapshot_dt = '2023-11-08'
+        and snapshot_dt = '20231130'
     )
 
 select
@@ -494,6 +487,24 @@ left join
 df_stage1 = df_stage1.join(df_contact_dl,df_stage1["pcl_contactid"]==df_contact_dl["reference_number"] , how= "left")
 df_stage1 = df_stage1.cache()
 print (f"df_stage1_count : {df_stage1.count()}")
+
+
+
+df_stage1.createOrReplaceTempView('df_stage1')
+df_stage1 = spark.sql('''
+select
+    *,
+    coalesce(mobile_no, '1234567890') cdl_mobileNumber,
+    coalesce(first_name, 'DONTHIREDDY') cdl_firstName,
+    coalesce(last_name, 'REDDY') cdl_lastName,
+    coalesce(email_id, 'na@na.com') cdl_emailid
+from
+    df_stage1
+    
+   
+''').withColumn("msilContact", F.concat_ws(" ", F.col("cdl_firstName"), F.col("cdl_lastName")))
+           
+
 
 
 df_stage1 = df_stage1.drop('leadqualitycode', 'prioritycode', 'industrycode', 'preferredcontactmethodcode',
@@ -580,6 +591,10 @@ df_stage1 = df_stage1.drop('leadqualitycode', 'prioritycode', 'industrycode', 'p
     'pcl_beneficiarysphonenumber1countrycode', 'pcl_beneficiarysphonenumber2',
     'pcl_beneficiarysphonenumber2areacode', 'pcl_beneficiarysphonenumber2countrycode','pcl_phonenumber3',
 'pcl_phonenumber3areacode','pcl_phonenumber3countrycode')
+
+
+
+
 
 df_stage2 = df_stage1.withColumn("prospectType",F.when(F.col("prospectTypeSrc")=="Suzuki Connect","Enquiry Suzuki Connect")\
                        .when(F.col("prospectTypeSrc")=="MGP","Enquiry MSGA & MSGP")\
@@ -673,8 +688,8 @@ select
                 when buysell = 'Sell'
                 then array(
                     struct('QM004' questionId, array(coalesce(pcl_interestedinexchange_new, '')) response), 
-                           struct('QM005' questionId, array(coalesce(pcl_purchase_option, '')) response), 
-                           struct('QM010' questionId, array('>3 months, Deferred Decision') response)
+                           struct('QM005' questionId, array('') response), 
+                           struct('QM010' questionId, array('>3 months', 'Deferred Decision') response)
                 )
            end
         else Null
@@ -685,6 +700,7 @@ from
 
 df_stage2.count()
 #df_stage2.printSchema()
+
 
 ###Condition to get TrueValue and Sales Prospect from Leadbase table(stage2) 
      # &
@@ -1295,9 +1311,14 @@ df_stage17_dealertype = df_stage17_lob.withColumn(
     .when(col("dealertype") == "3S", "SALES + SERVICE + SPARES DEALER")
     .when(col("dealertype") == "TV", "True Value")
     .when(col("dealertype") == "2S", "Service + Spares Dealer")
-    .otherwise(col("dealertype")))   
+    .otherwise(col("dealertype")))
+    
+    
+df_dealercategory_type1 = df_stage17_dealertype.withColumn("type1", when(col("type1") == 'DDL',"Dealer")
+                                                           .when(col("type1") == 'DDT',"Distributor")
+                                                           .otherwise(col("type1")))    
 
-df_stage18 = df_stage17_dealertype.withColumn("carColor",F.lit("NA"))\
+df_stage18 = df_dealercategory_type1.withColumn("carColor",F.lit("NA"))\
                        .withColumn("modeOfCommunication",F.lit("NA"))\
                        .withColumn("buyerType",F.lit("NA"))\
                        .withColumn("primaryUsage",F.lit("NA"))\
@@ -1313,7 +1334,7 @@ df_stage18 = df_stage17_dealertype.withColumn("carColor",F.lit("NA"))\
                        .withColumn("followUpDate",F.lit("NA"))\
                        .withColumn("action",F.lit("NA"))\
                        .withColumn("stage",F.lit("NA"))\
-                       .withColumn("sourceCampaign",F.lit("NA"))\
+                       .withColumn("sourceCampaign",F.lit("Inbound"))\
                        .withColumn("countryCode",F.lit("NA"))\
                        .withColumn("alternateContactNumber",F.lit("NA"))\
                        .withColumn("colorCode",F.lit("NA"))\
@@ -1321,16 +1342,19 @@ df_stage18 = df_stage17_dealertype.withColumn("carColor",F.lit("NA"))\
                        .withColumn("dmsEnquiryId", F.lit("NA"))\
                        .withColumn("dmsEnquiryCreatedOn", F.lit("NA"))\
                        .withColumn("dmsEnquiryExist", F.lit(False))\
+                       .withColumn("createdByDefault", F.lit("vivekgupta04@maruticrm.onmicrosoft.com"))\
                        .withColumn("AdminCreatedon",date_format(col('createdOn_leadbase'), 'dd/MM/yyyy'))\
-                       .withColumn("SecondCreatedon",date_format(to_timestamp(col('createdOn_leadbase'), 'yyyy-MM-dd HH:mm:ss'), 'dd/MM/yyyy HH:mm:ss.SSS'))\
+                       .withColumn("SecondCreatedon",date_format(to_timestamp(col('createdOn_leadbase'), 'yyyy-MM-dd HH:mm:ss'), 'dd/MM/yyyy HH:mm:ss'))\
                        .withColumn("createdonDB",from_utc_timestamp(col('createdOn_leadbase'), 'UTC'))\
                        .withColumn("uniquecode_dealer" , F.concat_ws("-",F.col("mulcode_dealer"),F.col("forcode_dealer"),F.col("outletcd")))
+
 
 df_final = df_stage18.select("leadid","prospectId", "createdon",
 "prospectCode", 
 "prospectType", 
 "agentId", 
 "agentName",
+"createdByDefault",
 "SecondCreatedon",                             
 "dmsEnquiryId", 
 "AdminCreatedon",
@@ -1435,28 +1459,3 @@ print('##############TASK-7-REFRESH-ATHENA-COMPLETED################')
 
 print('##############JOB-COMPLETED-SUCCESSFULLY################')
 job.commit()
-
-
-
-
-
-
-
-#################outputlogs#############3
-
-Client : msil
-Domain : mscrm
-EntityName : prospect
-Source : dl
-Target : dl
-Action : structured
-Env : dev
-data_source_path : s3://msil-inbound-crm-raw-non-prod/source/parquet/
-target_write_path : s3://msil-inbound-crm-structured-non-prod/dev/history/prospect_dl/dataset_date=20231108/
-data_stage_path : s3://msil-inbound-crm-stage-non-prod/dev/history/prospect_dl/job_msil_mscrm_prospect_dl_to_dl_structured_dev
-database : msil_mscrm_structured_dev
-target_table : prospect_dl
-crawler : crawler-msil_mscrm_structured_dev-prospect_dl
-DATASET_DATE : 20231108
-##############TASK-1-PARAMETERS+SET_PATH-COMPLETED################
-##############TASK-2-UDF-DEFINED################
