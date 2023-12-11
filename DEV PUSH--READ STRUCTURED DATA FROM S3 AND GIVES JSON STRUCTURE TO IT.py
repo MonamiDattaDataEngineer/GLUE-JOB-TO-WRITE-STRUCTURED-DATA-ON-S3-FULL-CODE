@@ -1,4 +1,4 @@
-##########job name -- job_msil_mscrm_prospect_dl_to_documentdb_outbound_qa############
+##########job_msil_mscrm_prospect_dl_to_documentdb_outbound_sit###########
 #######################################TASK-0#################################################
 # IMPORTS
 
@@ -65,14 +65,14 @@ partition_col_value = job_run_id
 target_write_path = DATA_TARGET_PATH + Env + '/' + DATA_TARGET_PATH_PREFIX + '/' + target_table + '/' + f'{partition_col}={partition_col_value}/'
 data_stage_path = DATA_STAGE_PATH + Env + '/' + DATA_TARGET_PATH_PREFIX + '/' + target_table + '/' + JOB_NAME.lower()
 
-documentdb_uri = "mongodb://docdb-inbound-crm-qa-cluster.caphsxy1o5sy.ap-south-1.docdb.amazonaws.com:27017"
-documentdb_write_uri = "mongodb://docdb-inbound-crm-qa-cluster.caphsxy1o5sy.ap-south-1.docdb.amazonaws.com:27017"
+documentdb_uri = "mongodb://docdb-inbound-crm-sit-cluster.cluster-caphsxy1o5sy.ap-south-1.docdb.amazonaws.com:27017"
+documentdb_write_uri = "mongodb://docdb-inbound-crm-sit-cluster.cluster-caphsxy1o5sy.ap-south-1.docdb.amazonaws.com:27017"
 read_docdb_options = {
     "uri": documentdb_uri,
     "database": "prospect-db",
     "collection": "prospect_details",
-    "username": "KPMG_QA_PROSPECT_RW",
-    "password": "KKMM$QA78PROSPECT#RW",
+    "username": "docdbinboundqauser",
+    "password": "CRMsit098",
     "ssl": "true",
     "ssl.domain_match": "false",
     "partitioner": "MongoSamplePartitioner",
@@ -85,8 +85,8 @@ write_documentdb_options = {
     "uri": documentdb_uri,
     "database": "prospect-db",
     "collection": "prospect_details",
-    "username": "KPMG_QA_PROSPECT_RW",
-    "password": "KKMM$QA78PROSPECT#RW",
+    "username": "docdbinboundqauser",
+    "password": "CRMsit098",
     "ssl": "true",
     "ssl.domain_match": "false",
     "partitioner": "MongoSamplePartitioner",
@@ -223,7 +223,7 @@ else:
          DATASET_DATE='{DATASET_DATE}'
     ''')
 
-df_insert = df_insert.limit(1000)
+df_insert = df_insert
 df_insert.write.format('parquet').mode('overwrite').save(f'{data_stage_path}/stage0')
 df_insert = spark.read.format('parquet').load(f'{data_stage_path}/stage0')
 df_insert = df_insert.cache()
@@ -310,6 +310,8 @@ select
         accessoriesPartNumber accessoriesPartNumber,
         averageRunningDay averageRunningDay,
         avgLoadCarrier avgLoadCarrier,
+        sparePartInterested, 
+        sparePartNumber,
         buyerType buyerType,
         carColor,
         customerProfile customerProfile,
